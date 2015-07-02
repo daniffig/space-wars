@@ -1,0 +1,31 @@
+var eurecaServer;
+
+var eurecaClientSetup = function () {
+  var eurecaClient = new Eureca.Client();
+  
+  eurecaClient.ready(function (proxy) {
+    eurecaServer = proxy;
+    
+    create();
+  });
+}
+
+var game = new Phaser.Game(1280, 320, Phaser.AUTO, 'phaser-example', { preload: preload, create: eurecaClientSetup, update: update, render: render });
+
+function preload () {
+  game.load.image('basketball', 'assets/basketball.png');
+}
+
+function create () {
+  console.log('created!');
+}
+
+function update () {
+
+}
+
+function render () {
+
+}
+
+

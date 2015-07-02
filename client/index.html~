@@ -1,0 +1,10 @@
+<html>
+  <head>
+    <script src="/eureca.js" type="text/javascript"></script>
+    <script src="/js/phaser.min.js" type="text/javascript"></script>
+    <script src="/js/bouncer-client.js" type="text/javascript"></script>
+    <title>Bouncer!</title>
+  </head>
+  <body>
+  </body>
+</html>
