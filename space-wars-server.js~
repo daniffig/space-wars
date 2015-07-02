@@ -21,8 +21,6 @@ eurecaServer.onConnect(function (connection) {
 
 eurecaServer.exports.test = function (value) {
   console.log(this.connection);
-  
-  eurecaServer.getClient(this.connection.id).test(value);
 }
   
 server.listen(8080);  
