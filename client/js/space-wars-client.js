@@ -1,4 +1,4 @@
-var eurecaServer, ready;
+var eurecaServer, ready, myId, myShip, ships = {};
 
 var eurecaClientSetup = function () {
   var eurecaClient = new Eureca.Client();
@@ -9,25 +9,96 @@ var eurecaClientSetup = function () {
     create();
   });
   
-  eurecaClient.exports.test = function () {
-    if (input.up) {    
-      game.physics.arcade.accelerationFromRotation(ship.rotation, 200, ship.body.acceleration);
-    }
-    else
-    {    
-      ship.body.acceleration.set(0);
-    }
-  
-    if (input.left) {  
-      ship.body.angularVelocity = -300;
-    }
-    else if (input.right) {
+  eurecaClient.exports.setId = function (id) {
+    myId = id;
     
-      ship.body.angularVelocity = 300;
+    inGame = eurecaServer.joinGame(myId);
+    
+    if (inGame) {
+      enableControl();
     }
-    else {
-      ship.body.angularVelocity = 0;
+  }
+  
+  eurecaClient.exports.spawnShip = function (id, state) {
+    ships[id] = new Ship(id);
+  }
+  
+  eurecaClient.exports.pong = function (pong) {
+    now = new Date();    
+    game.debug.text((now.getTime() - pong) + 'ms', 50, 50, 'white');
+  }
+  
+  eurecaClient.exports.updateState = function (id, state) {
+    console.log('new state!');
+    
+    if (ships[id]) {
+      ships[id].setState(state);     
+      ships[id].update();
     }
+  }
+}
+
+var Ship = function (id, state) {
+  this.id = id;
+  this.isAlive = true;
+  
+  this.input = {
+    up: false,
+    left: false,
+    right: false
+  }
+  
+  this.sprite = game.add.sprite(200, 200, 'ship');
+  
+  if (state) {
+    this.sprite.x = state.position.x;
+    this.sprite.y = state.position.y;
+  }
+  
+  this.sprite.anchor.set(0.5);
+  
+  game.physics.enable(this.sprite, Phaser.Physics.ARCADE);
+  
+  this.sprite.body.drag.set(100);
+  this.sprite.body.maxVelocity.set(200);
+  this.sprite.body.collideWorldBounds = true;
+}
+
+Ship.prototype.setState = function (state) {
+  this.input = state.input;
+  this.sprite.x = state.position.x;
+  this.sprite.y = state.position.y;
+}
+
+Ship.prototype.update = function () {  
+  if (this.input.up) {    
+    game.physics.arcade.accelerationFromRotation(this.sprite.rotation, 200, this.sprite.body.acceleration);
+  }
+  else
+  {    
+    this.sprite.body.acceleration.set(0);
+  }
+
+  if (this.input.left) {  
+    this.sprite.body.angularVelocity = -300;
+  }
+  else if (this.input.right) {
+  
+    this.sprite.body.angularVelocity = 300;
+  }
+  else {
+    this.sprite.body.angularVelocity = 0;
+  }
+}
+
+Ship.prototype.getState = function () {
+  return {
+    input: this.input,
+    position: {
+      x: this.sprite.x,
+      y: this.sprite.y
+    },
+    rotation: this.sprite.rotation    
   }
 }
 
@@ -45,83 +116,62 @@ function preload () {
 }
 
 function create () {
+  game.stage.disableVisibilityChange = true;
   game.physics.startSystem(Phaser.Physics.ARCADE);
   
-  ship = game.add.sprite(200, 200, 'ship');
-  
-  ship.anchor.set(0.5);
-  
-  game.physics.enable(ship, Phaser.Physics.ARCADE);
-  
-  ship.body.drag.set(100);
-  ship.body.maxVelocity.set(200);
-  ship.body.collideWorldBounds = true;
-  
-  cursors = game.input.keyboard.createCursorKeys();
-  
-  w = game.input.keyboard.addKey(Phaser.Keyboard.W);
-  a = game.input.keyboard.addKey(Phaser.Keyboard.A);
-  d = game.input.keyboard.addKey(Phaser.Keyboard.D);
-  
-  w.onDown.add(function () {
-    input.up = true;
-    eurecaServer.test(input);
-  });
-  
-  w.onUp.add(function () {
-    input.up = false;
-    eurecaServer.test(input);
-  });
-  
-  a.onDown.add(function () {
-    input.left = true;
-    eurecaServer.test(input);
-  });
-  
-  a.onUp.add(function () {
-    input.left = false;
-    eurecaServer.test(input);
-  });
-  
-  d.onDown.add(function () {
-    input.right = true;
-    eurecaServer.test(input);
-  });
-  
-  d.onUp.add(function () {
-    input.right = false;
-    eurecaServer.test(input);
-  });
-  
   ready = true;
+  
+  setInterval(function () {  
+    now = new Date();
+    eurecaServer.ping(now.getTime());
+  }, 3000);
 }
 
 function update () {
   if (!ready) return;
   
-  /*
-  if (cursors.up.isDown) {    
-    eurecaServer.test(true);
+  for (s in ships) {
+    ships[s].update();
   }
-  else {
-    ship.body.acceleration.set(0);
-  }
-  
-  if (cursors.left.isDown) {  
-    ship.body.angularVelocity = -300;
-  }
-  else if (cursors.right.isDown) {
-  
-    ship.body.angularVelocity = 300;
-  }
-  else {
-    ship.body.angularVelocity = 0;
-  }
-  */
 }
 
 function render () {
+}
 
+function enableControl() {  
+  w = game.input.keyboard.addKey(Phaser.Keyboard.W);
+  a = game.input.keyboard.addKey(Phaser.Keyboard.A);
+  d = game.input.keyboard.addKey(Phaser.Keyboard.D);
+  
+  w.onDown.add(function () {
+    ships[myId].input.up = true;
+    eurecaServer.notifyStateChange(myId, ships[myId].getState());
+  });
+  
+  w.onUp.add(function () {
+    ships[myId].input.up = false;
+    eurecaServer.notifyStateChange(myId, ships[myId].getState());
+  });
+  
+  a.onDown.add(function () {
+    ships[myId].input.left = true;
+    eurecaServer.notifyStateChange(myId, ships[myId].getState());
+  });
+  
+  a.onUp.add(function () {
+    ships[myId].input.left = false;
+    eurecaServer.notifyStateChange(myId, ships[myId].getState());
+  });
+  
+  d.onDown.add(function () {
+    ships[myId].input.right = true;
+    eurecaServer.notifyStateChange(myId, ships[myId].getState());
+  });
+  
+  d.onUp.add(function () {
+    ships[myId].input.right = false;
+    eurecaServer.notifyStateChange(myId, ships[myId].getState());
+  });
 }
 
 
