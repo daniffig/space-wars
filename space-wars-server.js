@@ -65,10 +65,10 @@ eurecaServer.exports.joinGame = function (id) {
 }
 
 eurecaServer.exports.notifyStateChange = function (id, state) {
-  clients[c].lastState = state;
+  clients[id].lastState = state;
 
   for (c in clients) {
-    clients[c].remote.updateState(id, state);
+    clients[c].remote.updateState(id, clients[c].lastState);
   }
 }
 

@@ -20,7 +20,7 @@ var eurecaClientSetup = function () {
   }
   
   eurecaClient.exports.spawnShip = function (id, state) {
-    ships[id] = new Ship(id);
+    ships[id] = new Ship(id, state);
   }
   
   eurecaClient.exports.pong = function (pong) {
@@ -29,8 +29,6 @@ var eurecaClientSetup = function () {
   }
   
   eurecaClient.exports.updateState = function (id, state) {
-    console.log('new state!');
-    
     if (ships[id]) {
       ships[id].setState(state);     
 //      ships[id].update();
@@ -52,14 +50,18 @@ var Ship = function (id, state) {
     up: false,
     left: false,
     right: false
+  }  
+  
+  this.keys = {
+    up: false,
+    left: false,
+    right: false
   }
   
   this.sprite = game.add.sprite(200, 200, 'ship');
   
-  console.log(state);
-  
   if (state) {
-    this.input = state.input;
+    this.keys = state.input;
     this.sprite.x = state.position.x;
     this.sprite.y = state.position.y;
     this.sprite.rotation = state.rotation;
@@ -75,12 +77,12 @@ var Ship = function (id, state) {
 }
 
 Ship.prototype.setState = function (state) {
-  this.input = state.input;
-  /*
-  this.sprite.x = state.position.x;
-  this.sprite.y = state.position.y;
-  this.sprite.rotation = state.rotation;
-  */
+  if (state) {
+    this.keys = state.input;
+    this.sprite.x = state.position.x;
+    this.sprite.y = state.position.y;
+    this.sprite.rotation = state.rotation;
+  }
 }
 
 Ship.prototype.getState = function () {
@@ -95,7 +97,8 @@ Ship.prototype.getState = function () {
 }
 
 Ship.prototype.update = function () {  
-  if (this.input.up) {    
+  console.log(this.keys);
+  if (this.keys.up) {    
     game.physics.arcade.accelerationFromRotation(this.sprite.rotation, 200, this.sprite.body.acceleration);
   }
   else
@@ -103,10 +106,10 @@ Ship.prototype.update = function () {
     this.sprite.body.acceleration.set(0);
   }
 
-  if (this.input.left) {  
+  if (this.keys.left) {  
     this.sprite.body.angularVelocity = -300;
   }
-  else if (this.input.right) {  
+  else if (this.keys.right) {  
     this.sprite.body.angularVelocity = 300;
   }
   else {
@@ -114,14 +117,19 @@ Ship.prototype.update = function () {
   }
 }
 
-var game = new Phaser.Game(1280, 320, Phaser.AUTO, 'space-wars', { preload: preload, create: eurecaClientSetup, update: update, render: render });
+Ship.prototype.kill = function () {
+  this.isAlive = false;
+  this.sprite.kill();
+}
+
+var game = new Phaser.Game(640, 320, Phaser.AUTO, 'space-wars', { preload: preload, create: eurecaClientSetup, update: update, render: render });
 
 function preload () {
+  game.stage.disableVisibilityChange = true;
   game.load.image('ship', 'assets/ship.png');
 }
 
 function create () {
-  game.stage.disableVisibilityChange = true;
   game.physics.startSystem(Phaser.Physics.ARCADE);
   
   ready = true;

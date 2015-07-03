@@ -7,7 +7,7 @@ app.use(express.static(path.resolve(__dirname, 'client')));
   
 var Eureca = require('eureca.io');
   
-var eurecaServer = new Eureca.Server({allow: ['setId', 'spawnShip', 'updateState', 'pong']});
+var eurecaServer = new Eureca.Server({allow: ['setId', 'spawnShip', 'updateState', 'removeShip', 'pong']});
 
 eurecaServer.attach(server);
 
@@ -68,7 +68,7 @@ eurecaServer.exports.notifyStateChange = function (id, state) {
   clients[c].lastState = state;
 
   for (c in clients) {
-    clients[c].remote.updateState(id, state);
+    clients[c].remote.updateState(id, clients[c].lastState);
   }
 }
 
