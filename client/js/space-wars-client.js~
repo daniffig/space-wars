@@ -33,7 +33,13 @@ var eurecaClientSetup = function () {
     
     if (ships[id]) {
       ships[id].setState(state);     
-      ships[id].update();
+//      ships[id].update();
+    }
+  }
+  
+  eurecaClient.exports.removeShip = function (id) {
+    if (ships[id]) {
+      ships[id].kill();
     }
   }
 }
@@ -50,9 +56,13 @@ var Ship = function (id, state) {
   
   this.sprite = game.add.sprite(200, 200, 'ship');
   
+  console.log(state);
+  
   if (state) {
+    this.input = state.input;
     this.sprite.x = state.position.x;
     this.sprite.y = state.position.y;
+    this.sprite.rotation = state.rotation;
   }
   
   this.sprite.anchor.set(0.5);
@@ -66,8 +76,22 @@ var Ship = function (id, state) {
 
 Ship.prototype.setState = function (state) {
   this.input = state.input;
+  /*
   this.sprite.x = state.position.x;
   this.sprite.y = state.position.y;
+  this.sprite.rotation = state.rotation;
+  */
+}
+
+Ship.prototype.getState = function () {
+  return {
+    input: this.input,
+    position: {
+      x: this.sprite.x,
+      y: this.sprite.y
+    },
+    rotation: this.sprite.rotation    
+  }
 }
 
 Ship.prototype.update = function () {  
@@ -82,8 +106,7 @@ Ship.prototype.update = function () {
   if (this.input.left) {  
     this.sprite.body.angularVelocity = -300;
   }
-  else if (this.input.right) {
-  
+  else if (this.input.right) {  
     this.sprite.body.angularVelocity = 300;
   }
   else {
@@ -91,25 +114,7 @@ Ship.prototype.update = function () {
   }
 }
 
-Ship.prototype.getState = function () {
-  return {
-    input: this.input,
-    position: {
-      x: this.sprite.x,
-      y: this.sprite.y
-    },
-    rotation: this.sprite.rotation    
-  }
-}
-
 var game = new Phaser.Game(1280, 320, Phaser.AUTO, 'space-wars', { preload: preload, create: eurecaClientSetup, update: update, render: render });
-
-var cursors, ship, w;
-var input = {
-  up: false,
-  left: false,
-  right: false
-}
 
 function preload () {
   game.load.image('ship', 'assets/ship.png');
@@ -129,6 +134,13 @@ function create () {
 
 function update () {
   if (!ready) return;
+  
+  for (s in ships) {
+    if (ships[s].isAlive)
+    {
+      ships[s].update();
+    }
+  }
 }
 
 function render () {

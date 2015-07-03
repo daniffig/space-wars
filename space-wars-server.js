@@ -7,7 +7,7 @@ app.use(express.static(path.resolve(__dirname, 'client')));
   
 var Eureca = require('eureca.io');
   
-var eurecaServer = new Eureca.Server({allow: ['setId', 'spawnShip', 'updateState', 'pong']});
+var eurecaServer = new Eureca.Server({allow: ['setId', 'spawnShip', 'updateState', 'removeShip', 'pong']});
 
 eurecaServer.attach(server);
 
@@ -28,7 +28,11 @@ eurecaServer.onConnect(function (connection) {
   
   var newClient = eurecaServer.getClient(connection.id);
   
-  clients[connection.id] = { id: connection.id, remote: newClient }
+  clients[connection.id] = {
+    id: connection.id,
+    remote: newClient,
+    lastState: null
+  }
   
   newClient.setId(connection.id);
 });
@@ -39,17 +43,21 @@ eurecaServer.onDisconnect(function (connection) {
   if (clients[connection.id]) {
     delete clients[connection.id];
   }
+  
+  for (c in clients) {
+    clients[c].remote.removeShip(connection.id);
+  }
 });
 
 eurecaServer.exports.joinGame = function (id) {
   console.log('join game ', id);
   for (c in clients) {
-    clients[id].remote.spawnShip(clients[c].id);
+    clients[id].remote.spawnShip(clients[c].id, clients[c].lastState);
   }
   
   for (c in clients) {
-    if (clients[c].id != id) {
-      clients[c].remote.spawnShip(id);
+    if (clients[c].id != id) {  
+      clients[c].remote.spawnShip(id, clients[id].lastState);
     }
   }
   
@@ -57,6 +65,8 @@ eurecaServer.exports.joinGame = function (id) {
 }
 
 eurecaServer.exports.notifyStateChange = function (id, state) {
+  clients[c].lastState = state;
+
   for (c in clients) {
     clients[c].remote.updateState(id, state);
   }
