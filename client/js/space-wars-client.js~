@@ -1,4 +1,4 @@
-var eurecaServer, ready, myId, myShip, ships = {};
+var eurecaServer, ready, myId, myShip, ships = {}, created, count = 0;
 
 var eurecaClientSetup = function () {
   var eurecaClient = new Eureca.Client();
@@ -16,6 +16,7 @@ var eurecaClientSetup = function () {
     
     if (inGame) {
       enableControl();
+      created = true;
     }
   }
   
@@ -40,6 +41,13 @@ var eurecaClientSetup = function () {
       ships[id].kill();
     }
   }
+  
+  eurecaClient.exports.diastole = function (id, response) {
+    if (!ships[id]) return;
+    
+    ships[id].sprite.position = response.position;
+    ships[id].sprite.rotation = response.rotation;    
+  }
 }
 
 var Ship = function (id, state) {
@@ -48,14 +56,14 @@ var Ship = function (id, state) {
   
   this.input = {
     up: false,
-    left: false,
-    right: false
+    right: false,    
+    left: false
   }  
   
   this.keys = {
     up: false,
-    left: false,
-    right: false
+    right: false,    
+    left: false
   }
   
   this.sprite = game.add.sprite(200, 200, 'ship');
@@ -97,7 +105,7 @@ Ship.prototype.getState = function () {
 }
 
 Ship.prototype.update = function () {  
-  console.log(this.keys);
+//  console.log(this.keys);
   if (this.keys.up) {    
     game.physics.arcade.accelerationFromRotation(this.sprite.rotation, 200, this.sprite.body.acceleration);
   }
@@ -120,6 +128,19 @@ Ship.prototype.update = function () {
 Ship.prototype.kill = function () {
   this.isAlive = false;
   this.sprite.kill();
+}
+
+Ship.prototype.getUserCommand = function () {
+  userCommand = new dvUserCommand();
+  
+  userCommand.keys = this.input;
+  userCommand.position.x = this.sprite.position.x;
+  userCommand.position.y = this.sprite.position.y;
+  userCommand.rotation = this.sprite.rotation;
+  userCommand.velocity.x = this.sprite.body.velocity.x;
+  userCommand.velocity.y = this.sprite.body.velocity.y;
+  
+  return userCommand;
 }
 
 var game = new Phaser.Game(640, 320, Phaser.AUTO, 'space-wars', { preload: preload, create: eurecaClientSetup, update: update, render: render });
@@ -149,6 +170,12 @@ function update () {
       ships[s].update();
     }
   }
+  
+//  console.log(count++);
+  
+  if (!created) return;
+  
+//  response = eurecaServer.systole(ships[myId].sprite.position.x);
 }
 
 function render () {
@@ -158,36 +185,54 @@ function enableControl() {
   w = game.input.keyboard.addKey(Phaser.Keyboard.W);
   a = game.input.keyboard.addKey(Phaser.Keyboard.A);
   d = game.input.keyboard.addKey(Phaser.Keyboard.D);
+  q = game.input.keyboard.addKey(Phaser.Keyboard.Q);
   
   w.onDown.add(function () {
     ships[myId].input.up = true;
-    eurecaServer.notifyStateChange(myId, ships[myId].getState());
+//    eurecaServer.notifyStateChange(myId, ships[myId].getState());
   });
   
   w.onUp.add(function () {
     ships[myId].input.up = false;
-    eurecaServer.notifyStateChange(myId, ships[myId].getState());
+//    eurecaServer.notifyStateChange(myId, ships[myId].getState());
   });
   
   a.onDown.add(function () {
     ships[myId].input.left = true;
-    eurecaServer.notifyStateChange(myId, ships[myId].getState());
+//    eurecaServer.notifyStateChange(myId, ships[myId].getState());
   });
   
   a.onUp.add(function () {
     ships[myId].input.left = false;
-    eurecaServer.notifyStateChange(myId, ships[myId].getState());
+//    eurecaServer.notifyStateChange(myId, ships[myId].getState());
   });
   
   d.onDown.add(function () {
     ships[myId].input.right = true;
-    eurecaServer.notifyStateChange(myId, ships[myId].getState());
+//    eurecaServer.notifyStateChange(myId, ships[myId].getState());
   });
   
   d.onUp.add(function () {
     ships[myId].input.right = false;
-    eurecaServer.notifyStateChange(myId, ships[myId].getState());
+//    eurecaServer.notifyStateChange(myId, ships[myId].getState());
+  });  
+  
+  q.onDown.add(function () {
+    console.log(ships[myId].getUserCommand().position.x);
+    eurecaServer.systole(ships[myId].getUserCommand());
+//    eurecaServer.systole(new dvUserCommand());
   });
+}
+
+var heartbeat = window.setInterval(function () { beat(); }, 50);
+
+var beat = function () {
+  if (!ships[myId]) return;  
+  
+  eurecaServer.systole(ships[myId].getUserCommand());
+//  console.log(ships[myId].sprite.position.x);
+//  response = eurecaServer.systole(ships[myId].getState());
+//  console.log(response);
 }
 
 
