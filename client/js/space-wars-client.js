@@ -53,6 +53,7 @@ var eurecaClientSetup = function () {
 
 var Ship = function (id, state) {
   this.id = id;
+  this.req_seq_id = 0;
   this.isAlive = true;
   
   this.input = {
@@ -134,6 +135,7 @@ Ship.prototype.kill = function () {
 Ship.prototype.getUserCommand = function () {
   userCommand = new dvUserCommand();
   
+  userCommand.id = this.seq_req_id++;
   userCommand.keys = this.input;
   userCommand.position.x = this.sprite.position.x;
   userCommand.position.y = this.sprite.position.y;
@@ -228,7 +230,7 @@ function enableControl() {
 var heartbeat = window.setInterval(function () { beat(); }, 50);
 
 var beat = function () {
-  if (!ships[myId]) return;  
+  if (!ships[myId]) return;
   
   eurecaServer.systole(ships[myId].getUserCommand());
 //  console.log(ships[myId].sprite.position.x);
