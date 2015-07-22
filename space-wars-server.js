@@ -1,15 +1,20 @@
 var express = require('express')
   , path = require('path')
+  , cors = require('cors')
   , app = express(app)
   , server = require('http').createServer(app);
   
+app.use(cors());
+  
 app.use(express.static(path.resolve(__dirname, 'client')));
 
+/*
 app.all('/*', function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "X-Requested-With");
   next();
 });
+*/
   
 var Eureca = require('eureca.io');
   

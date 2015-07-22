@@ -45,6 +45,8 @@ var eurecaClientSetup = function () {
   eurecaClient.exports.diastole = function (id, response) {
     if (!ships[id]) return;
     
+    console.log(response);
+    
     ships[id].sprite.position = response.position;
     ships[id].sprite.rotation = response.rotation;   
     ships[id].keys = response.keys;
@@ -161,7 +163,7 @@ function create () {
   setInterval(function () {  
     now = new Date();
     eurecaServer.ping(now.getTime());
-  }, 3000);
+  }, 10);
 }
 
 function update () {
@@ -192,31 +194,37 @@ function enableControl() {
   
   w.onDown.add(function () {
     ships[myId].input.up = true;
+    eurecaServer.systole(ships[myId].getUserCommand());
 //    eurecaServer.notifyStateChange(myId, ships[myId].getState());
   });
   
   w.onUp.add(function () {
     ships[myId].input.up = false;
+    eurecaServer.systole(ships[myId].getUserCommand());
 //    eurecaServer.notifyStateChange(myId, ships[myId].getState());
   });
   
   a.onDown.add(function () {
     ships[myId].input.left = true;
+    eurecaServer.systole(ships[myId].getUserCommand());
 //    eurecaServer.notifyStateChange(myId, ships[myId].getState());
   });
   
   a.onUp.add(function () {
     ships[myId].input.left = false;
+    eurecaServer.systole(ships[myId].getUserCommand());
 //    eurecaServer.notifyStateChange(myId, ships[myId].getState());
   });
   
   d.onDown.add(function () {
     ships[myId].input.right = true;
+    eurecaServer.systole(ships[myId].getUserCommand());
 //    eurecaServer.notifyStateChange(myId, ships[myId].getState());
   });
   
   d.onUp.add(function () {
     ships[myId].input.right = false;
+    eurecaServer.systole(ships[myId].getUserCommand());
 //    eurecaServer.notifyStateChange(myId, ships[myId].getState());
   });  
   
@@ -232,7 +240,7 @@ var heartbeat = window.setInterval(function () { beat(); }, 50);
 var beat = function () {
   if (!ships[myId]) return;
   
-  eurecaServer.systole(ships[myId].getUserCommand());
+//  eurecaServer.systole(ships[myId].getUserCommand());
 //  console.log(ships[myId].sprite.position.x);
 //  response = eurecaServer.systole(ships[myId].getState());
 //  console.log(response);
