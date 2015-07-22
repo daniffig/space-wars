@@ -71,7 +71,9 @@ var Ship = function (id, state) {
   this.sprite.body.height = this.sprite.body.height * 0.6;
   this.sprite.body.width = this.sprite.body.width * 0.6;
   
-  this.sprite.body.bounce.setTo(1);
+  this.sprite.owner = this;
+  
+//  this.sprite.body.bounce.setTo(1);
 
   //  Our ships bullets
   this.bullets = game.add.group();
@@ -81,12 +83,39 @@ var Ship = function (id, state) {
   //  All 40 of them
   this.bullets.createMultiple(40, 'bullet');
   this.bullets.setAll('anchor.x', 0.5);
-  this.bullets.setAll('anchor.y', 0.5);
+  this.bullets.setAll('anchor.y', 0.5);  
+  
+  this.bullets.owner = this;
   
   this.nextFire = 0;
   this.fireRate = 200;  
   
-  collideShips.add(this.sprite);
+  collideBullets.add(this.bullets);
+  collideShips.add(this.sprite);  
+  
+  style = { font: "12px Arial", fill: "#ffffff", align: "center" };
+  
+  this.health = 100;
+  this.playerName = game.add.text(this.sprite.x, this.sprite.y, this.health, style);
+  
+//  this.healthBar = game.add.graphics((this.sprite.position.x - (this.playerName.width / 2)), (this.sprite.position.y - (this.sprite.height / 2)));
+
+/*
+  this.healthBar = game.add.graphics(0, 0);  
+  
+//  this.playerName.position.x = this.sprite.position.x - (this.playerName.width / 2);
+//  this.playerName.position.y = this.sprite.position.y + (this.sprite.height / 2);
+
+    // set a fill and line style
+    this.healthBar.beginFill(0xFF3300);
+    this.healthBar.lineStyle(5, 0xffd900, 1);
+    
+    
+    // draw a shape
+//    this.healthBar.moveTo(-20, -20);
+    this.healthBar.lineTo(50, 0);
+    this.healthBar.endFill();
+    */
 }
 
 Ship.prototype.setState = function (state) {
@@ -124,11 +153,22 @@ Ship.prototype.update = function () {
   else this.sprite.body.angularVelocity = 0;
   
   if (this.keys.fire) this.fire();
+  
+  this.playerName.position.x = this.sprite.position.x - (this.playerName.width / 2);
+  this.playerName.position.y = this.sprite.position.y + (this.sprite.height / 2);
+  /*
+//  this.healthBar.position = this.sprite.position;
+  
+  this.healthBar.position.x = (this.sprite.position.x + (this.sprite.width / 2)) - (this.healthBar.width);
+  
+  this.healthBar.position.y = this.sprite.position.y - this.sprite.height;
+  */
 }
 
 Ship.prototype.kill = function () {
   this.isAlive = false;
   this.sprite.kill();
+  this.playerName.kill();
 }
 
 Ship.prototype.getUserCommand = function () {
@@ -152,7 +192,7 @@ Ship.prototype.fire = function () {
 
     if (bullet)
     {
-      bullet.reset(this.sprite.body.x + 16, this.sprite.body.y + 16);
+      bullet.reset(this.sprite.body.x + this.sprite.body.halfWidth, this.sprite.body.y + this.sprite.body.halfHeight);
       bullet.lifespan = 2000;
       bullet.rotation = this.sprite.rotation;
       game.physics.arcade.velocityFromRotation(this.sprite.rotation, 400, bullet.body.velocity);
@@ -177,8 +217,7 @@ function create () {
   
   ready = true;
   
-  collideBullets = game.add.group();
-  
+  collideBullets = game.add.group();  
   collideShips = game.add.group();
 /*  
   setInterval(function () {  
@@ -198,12 +237,19 @@ function update () {
     }
   }
   
-//  game.physics.arcade.collide(collideShips, collideShips, shipCollision);
+  game.physics.arcade.overlap(collideBullets, collideShips, shipCollision);
 }
 
 var shipCollision = function (a, b) {
-  console.log(a);
-  console.log(b);
+  shooterShip = a.parent.owner;
+  shotShip = b.owner;
+  
+  if (shooterShip.id == shotShip.id) return;   
+  if (shotShip.isShot) return; 
+  
+  shotShip.isShot = true;
+  
+  console.log(shotShip.isShot);
 }
 
 function render () {
