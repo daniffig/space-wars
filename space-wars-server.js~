@@ -7,24 +7,12 @@ var express = require('express')
 app.use(cors());
   
 app.use(express.static(path.resolve(__dirname, 'client')));
-
-app.all('/*', function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "X-Requested-With");
-  next();
-});
   
 var Eureca = require('eureca.io');
   
 var eurecaServer = new Eureca.Server({allow: ['setId', 'spawnShip', 'updateState', 'removeShip', 'pong', 'diastole']});
 
 eurecaServer.attach(server);
-
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
 
 app.get('/', function (req, res, next) {
   res.sendFile('index.html');
@@ -73,26 +61,14 @@ eurecaServer.exports.joinGame = function (id) {
   return true;
 }
 
-eurecaServer.exports.notifyStateChange = function (id, state) {
-  clients[id].lastState = state;
-/*
-  for (c in clients) {
-    clients[c].remote.updateState(id, clients[c].lastState);
-  }
-*/  
-}
-
 eurecaServer.exports.ping = function (ping) {
   eurecaServer.getClient(this.connection.id).pong(ping);
 }
 
 eurecaServer.exports.systole = function (request) {
-  console.log(request);
-
   for (c in clients) {
     clients[c].remote.diastole(this.connection.id, request);
   }
-//  eurecaServer.getClient(this.connection.id).diastole(request + 1);
 }
   
 server.listen(8080);  
