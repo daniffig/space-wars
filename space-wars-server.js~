@@ -10,7 +10,7 @@ app.use(express.static(path.resolve(__dirname, 'client')));
   
 var Eureca = require('eureca.io');
   
-var eurecaServer = new Eureca.Server({allow: ['setId', 'spawnShip', 'updateState', 'removeShip', 'pong', 'diastole']});
+var eurecaServer = new Eureca.Server({allow: ['setId', 'spawnShip', 'removeShip', 'pong', 'diastole', 'hit']});
 
 eurecaServer.attach(server);
 
@@ -66,8 +66,15 @@ eurecaServer.exports.ping = function (ping) {
 }
 
 eurecaServer.exports.systole = function (request) {
+  console.log('systole received');
   for (c in clients) {
     clients[c].remote.diastole(this.connection.id, request);
+  }
+}
+
+eurecaServer.exports.hit = function (a, b) {  
+  for (c in clients) {
+    clients[c].remote.hit(a, b);
   }
 }
   

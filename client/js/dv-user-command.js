@@ -1,5 +1,6 @@
 var dvUserCommand = function () {
   this.id = 0;
+  this.createdAt = Date.now();
   this.keys = { up: false, right: false, left: false, fire: false };  
   this.position = { x: 0, y: 0 };
   this.rotation = 0;

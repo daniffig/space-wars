@@ -4,7 +4,8 @@ var eurecaServer
   , myShip
   , ships = {}
   , collideBullets
-  , collideShips;
+  , collideShips
+  , ping = 0;
 
 var eurecaClientSetup = function () {
   var eurecaClient = new Eureca.Client();
@@ -37,12 +38,21 @@ var eurecaClientSetup = function () {
   }
   
   eurecaClient.exports.diastole = function (id, response) {
+    if (id == myId) ping = Date.now() - response.createdAt;
     if (!ships[id] || (ships[id].req_seq_id > response.id)) return;
     
     ships[id].sprite.position = response.position;
     ships[id].sprite.rotation = response.rotation;   
     ships[id].keys = response.keys;
     ships[id].req_seq_id = response.id;
+  }
+  
+  eurecaClient.exports.hit = function (killerId, victimId) {
+    console.log('killer: ' + killerId + ' | victim: ' + victimId);
+    
+    if (!ships[victimId]) return;
+    
+    ships[victimId].hit(killerId);
   }
 }
 
@@ -156,6 +166,7 @@ Ship.prototype.update = function () {
   
   this.playerName.position.x = this.sprite.position.x - (this.playerName.width / 2);
   this.playerName.position.y = this.sprite.position.y + (this.sprite.height / 2);
+  this.playerName.text = this.health;
   /*
 //  this.healthBar.position = this.sprite.position;
   
@@ -201,6 +212,11 @@ Ship.prototype.fire = function () {
   }
 }
 
+Ship.prototype.hit = function (enemyShipId) {
+  console.log('decrease health');
+  this.health -= 10;
+}
+
 var game = new Phaser.Game(640, 320, Phaser.AUTO, 'space-wars', { preload: preload, create: eurecaClientSetup, update: update, render: render });
 
 function preload () {
@@ -237,26 +253,29 @@ function update () {
     }
   }
   
-  game.physics.arcade.overlap(collideBullets, collideShips, shipCollision);
+  game.physics.arcade.overlap(collideBullets, collideShips, bulletHitShip);
 }
 
-var shipCollision = function (a, b) {
-  shooterShip = a.parent.owner;
-  shotShip = b.owner;
+var bulletHitShip = function (bullet, ship) {
+  killer = bullet.parent.owner;
+  victim = ship.owner;
   
-  if (shooterShip.id == shotShip.id) return;   
-  if (shotShip.isShot) return;
+  if (killer.id == victim.id) return;
+  if (!bullet.alive) return;
+
+  console.log(bullet);
   
+  bullet.kill();
   
-  shotShip.isShot = true;
-  
-  console.log(shotShip.isShot);
+  eurecaServer.hit(killer.id, victim.id);
 }
 
 function render () {
   if (!ready) return;
   
   if (!ships[myId]) return;  
+  
+  game.debug.text(ping + 'ms', 10, 20);
 
 //  for (s in ships) game.debug.body(ships[s].sprite);
 }
