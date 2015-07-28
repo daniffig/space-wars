@@ -75,7 +75,7 @@ var Ship = function (id, state) {
   game.physics.enable(this.sprite, Phaser.Physics.ARCADE);
   
   this.sprite.body.drag.set(100);
-  this.sprite.body.maxVelocity.set(200);
+  this.sprite.body.maxVelocity.set(400);
   this.sprite.body.collideWorldBounds = true;  
   
   this.sprite.body.height = this.sprite.body.height * 0.6;
@@ -150,7 +150,7 @@ Ship.prototype.getState = function () {
 
 Ship.prototype.update = function () {  
   if (this.keys.up) {    
-    game.physics.arcade.accelerationFromRotation(this.sprite.rotation, 200, this.sprite.body.acceleration);
+    game.physics.arcade.accelerationFromRotation(this.sprite.rotation, 400, this.sprite.body.acceleration);
   }
   else this.sprite.body.acceleration.set(0);
 
@@ -221,7 +221,7 @@ Ship.prototype.hit = function (enemyShipId) {
   }  
 }
 
-var game = new Phaser.Game(640, 320, Phaser.AUTO, 'space-wars', { preload: preload, create: eurecaClientSetup, update: update, render: render });
+var game = new Phaser.Game(640, 640, Phaser.AUTO, 'space-wars', { preload: preload, create: eurecaClientSetup, update: update, render: render });
 
 function preload () {
   game.stage.disableVisibilityChange = true;
@@ -239,6 +239,9 @@ function create () {
   
   collideBullets = game.add.group();  
   collideShips = game.add.group();
+  
+//  game.camera.follow(ships[myId]);
+
 /*  
   setInterval(function () {  
     now = new Date();
