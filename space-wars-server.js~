@@ -67,12 +67,14 @@ eurecaServer.exports.ping = function (ping) {
 
 eurecaServer.exports.systole = function (request) {
   console.log('systole received');
+  console.log(request);
   for (c in clients) {
     clients[c].remote.diastole(this.connection.id, request);
   }
 }
 
 eurecaServer.exports.hit = function (a, b) {  
+  console.log('hit received');
   for (c in clients) {
     clients[c].remote.hit(a, b);
   }

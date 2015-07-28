@@ -166,7 +166,6 @@ Ship.prototype.update = function () {
   
   this.playerName.position.x = this.sprite.position.x - (this.playerName.width / 2);
   this.playerName.position.y = this.sprite.position.y + (this.sprite.height / 2);
-  this.playerName.text = this.health;
   /*
 //  this.healthBar.position = this.sprite.position;
   
@@ -214,7 +213,12 @@ Ship.prototype.fire = function () {
 
 Ship.prototype.hit = function (enemyShipId) {
   console.log('decrease health');
-  this.health -= 10;
+  this.health -= 10;  
+  this.playerName.text = this.health;
+  
+  if (this.health <= 0) {
+    this.kill();
+  }  
 }
 
 var game = new Phaser.Game(640, 320, Phaser.AUTO, 'space-wars', { preload: preload, create: eurecaClientSetup, update: update, render: render });

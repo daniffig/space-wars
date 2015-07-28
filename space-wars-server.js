@@ -14,6 +14,12 @@ var eurecaServer = new Eureca.Server({allow: ['setId', 'spawnShip', 'removeShip'
 
 eurecaServer.attach(server);
 
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
 app.get('/', function (req, res, next) {
   res.sendFile('index.html');
 });
@@ -67,6 +73,7 @@ eurecaServer.exports.ping = function (ping) {
 
 eurecaServer.exports.systole = function (request) {
   console.log('systole received');
+  console.log(request);
   for (c in clients) {
     clients[c].remote.diastole(this.connection.id, request);
   }
